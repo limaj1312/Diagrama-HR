@@ -1,0 +1,60 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import AutoMinorLocator
+import matplotlib.font_manager as font_manager
+
+#Leitura dos dados
+Dados = pd.read_csv('C:/Users/user/Downloads/Projeto de Evolução Estelar/archive/hipparcos-voidmain.csv')
+pd.set_option('display.max_columns', 78)
+Dados.head()
+
+#Criação de um novo dataframe focado nos objetivos
+Novo_dataframe = Dados.loc[:,['Vmag', 'Plx', 'B-V']][Dados.loc[:,['Vmag', 'Plx', 'B-V']]['Plx']>0]
+
+#PRÉ PROCESSAMENTO
+#Tratamento de dados missing
+percentual_de_dados_missing = 100*(Novo_dataframe.isnull().sum()/len(Novo_dataframe['Plx']))
+Novo_dataframe = Novo_dataframe.dropna(subset = ['B-V'])
+Novo_dataframe = Novo_dataframe.sample(frac=0.25)
+
+#Realizando operações com as colunas do dataframe
+Magnitude_B_V = np.array(Novo_dataframe['B-V'], dtype=float)
+magnitude_aparente = np.array(Novo_dataframe['Vmag'], dtype=float)
+parallaxe_trigonometrica = np.array(Novo_dataframe['Plx'], dtype=float)
+
+dispc = 1/parallaxe_trigonometrica*1000
+Magnitude_absoluta = magnitude_aparente-5*np.log10(dispc/10)
+
+#Plotagem do diagrama Hertzprung-Russell (HR)
+Fonte1 = {'family': 'serif', 'weight': 'bold', 'color': 'red', 'size': 18}
+Fonte3 = font_manager.FontProperties(family='serif', weight='bold', style='normal', size=18)
+
+fig, ax = plt.subplots(figsize=(12.5,10.4))
+ax.scatter(Magnitude_B_V, Magnitude_absoluta, c=Magnitude_B_V, cmap = 'YlOrRd', marker = '.', s = 7, linewidth = 0.01)
+ax.scatter(x = -0.03, y = 11.18, c = 'white', marker = '*', s = 270, linewidth = 0.2, label = "Sirius B")
+ax.scatter(x = 1.713, y = 13.21, c = 'c', marker = '*', s = 270, linewidth = 0.2, label = "Barnard")
+ax.scatter(x = 0.656, y = 4.83, c = 'blue', marker = '*', s = 270, linewidth = 0.2, label = 'Sol')
+ax.scatter(x = 0, y = 1.42, c = 'green', marker = '*', s = 270, linewidth = 0.2, label = 'Sirius A')
+ax.scatter(x = 1.44, y = -0.641, c = 'red', marker = '*', s = 270, linewidth = 0.2, label = 'Aldebarã')
+ax.scatter(x = 1.85, y = -5.85, c = 'yellow', marker = '*', s = 270, linewidth = 0.2, label = 'Betelgeuse')
+plt.xlabel('Índice de cor (B-V)', fontdict = Fonte1)
+plt.ylabel('Magnitude Absoluta (Mv)', fontdict = Fonte1)
+plt.title('Diagrama de Hertzsprung-Russell', fontdict = Fonte1)
+plt.xlim(-0.1, 3.2)
+plt.ylim(14.8, -14.8)
+ax.xaxis.set_minor_locator(AutoMinorLocator())
+ax.yaxis.set_minor_locator(AutoMinorLocator())
+ax.tick_params(axis = 'both', direction = 'in', labelcolor = 'red', labelsize = 'xx-large', top = True, right = True)
+ax.tick_params(which = 'major', direction = 'in', color = 'red', length = 7, width = 3)
+ax.tick_params(which = 'minor', direction = 'in', length = 4, color = 'red', width = 2, top = True, right = True)
+for axis in ['top', 'bottom', 'left', 'right']:
+    ax.spines[axis].set_color('red')
+for axis in ['top', 'bottom', 'left', 'right']:
+    ax.spines[axis].set_linewidth(1.6)
+Color_BC = plt.gca()
+Color_BC.set_facecolor('black')
+Color_BC.patch.set_alpha(1)
+plt.legend(frameon = False, prop = Fonte3, labelcolor = 'white')
+plt.tight_layout()
+plt.show()
